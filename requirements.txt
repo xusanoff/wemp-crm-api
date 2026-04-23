@@ -1,0 +1,15 @@
+flask
+flask-cors
+flask-bcrypt
+flask-jwt-extended
+flask-migrate
+flask-sqlalchemy
+flask-restful
+flasgger
+psycopg2-binary
+pytz
+python-dateutil
+apscheduler
+requests
+paramiko==3.4.0
+sshtunnel==0.4.0
