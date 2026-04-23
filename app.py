@@ -35,7 +35,7 @@ def create_app():
 
     # ── CORS ──────────────────────────────────────────────────────
     CORS(app,
-         origins=["*"],
+         origins=["https://wemp-crm.vercel.app"],
          methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
          allow_headers=["Content-Type", "Authorization"],
          supports_credentials=True)
