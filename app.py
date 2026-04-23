@@ -29,6 +29,10 @@ DB_URL = f"postgresql://akbarov:akbarov@127.0.0.1:{tunnel.local_bind_port}/wemp_
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return "Hello from Flask"
+
 app.config.update(
     DEBUG=True,
     SECRET_KEY="dhq34155kjnjhjbu723uy545",
