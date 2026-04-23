@@ -13,9 +13,11 @@ from models.course_module    import CourseModule, ModuleLesson
 from utils.utils             import get_response
 from utils.decorators        import role_required
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+UPLOAD_FOLDER = "/tmp/uploads"
 ALLOWED_EXT   = {"pdf", "png", "jpg", "jpeg", "webp"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 
 
 def allowed_file(filename):
