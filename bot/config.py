@@ -9,7 +9,7 @@ BOT_TOKEN   = os.getenv("TELEGRAM_BOT_TOKEN",  "8458484762:AAGOem4rPMASxuIC8-BJV
 CHAT_ID     = os.getenv("TELEGRAM_CHAT_ID",    "1801631662")   # guruh yoki kanal ID
 
 # ── CRM API ───────────────────────────────────────────────────
-API_BASE    = os.getenv("CRM_API_BASE",         "http://localhost:8080/api")
+API_BASE    = os.getenv("CRM_API_BASE",         "wemp-crm-api-qbht.vercel.app/api")
 API_USER    = os.getenv("CRM_BOT_USERNAME",     "akbarov504")
 API_PASS    = os.getenv("CRM_BOT_PASSWORD",     "12345678")
 
