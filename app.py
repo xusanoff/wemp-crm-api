@@ -88,6 +88,19 @@ def create_app():
 
         db.create_all()
 
+        # Yangi ustunlarni avtomatik qo'shish (bir martalik, eski ma'lumotlarga ta'sir qilmaydi)
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as _conn:
+                for _col, _type in [("file_data", "TEXT"), ("file_size", "INTEGER")]:
+                    try:
+                        _conn.execute(text(f"ALTER TABLE module_lessons ADD COLUMN {_col} {_type}"))
+                        _conn.commit()
+                    except Exception:
+                        pass  # ustun allaqachon bor
+        except Exception as _e:
+            print(f"[MIGRATION] {_e}")
+
         from utils.utils import create_admin
         create_admin()
 
