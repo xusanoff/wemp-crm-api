@@ -11,7 +11,7 @@ from models import db, bcrypt, migrate
 from routes.auth_route          import auth_bp
 from routes.admin_route         import admin_bp
 from routes.course_route        import course_bp
-from routes.course_module_route import course_module_bp
+from routes.course_module_route import course_module_bp, file_bp
 from routes.operator_route      import operator_bp
 from routes.manager_route       import manager_bp
 from routes.lesson_route        import lesson_bp
@@ -66,6 +66,7 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(course_bp)
     app.register_blueprint(course_module_bp)
+    app.register_blueprint(file_bp)
     app.register_blueprint(operator_bp)
     app.register_blueprint(manager_bp)
     app.register_blueprint(lesson_bp)
