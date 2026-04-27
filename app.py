@@ -11,7 +11,7 @@ from models import db, bcrypt, migrate
 from routes.auth_route          import auth_bp
 from routes.admin_route         import admin_bp
 from routes.course_route        import course_bp
-from routes.course_module_route import course_module_bp, file_bp
+from routes.course_module_route import course_module_bp
 from routes.operator_route      import operator_bp
 from routes.manager_route       import manager_bp
 from routes.lesson_route        import lesson_bp
@@ -66,7 +66,6 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(course_bp)
     app.register_blueprint(course_module_bp)
-    app.register_blueprint(file_bp)
     app.register_blueprint(operator_bp)
     app.register_blueprint(manager_bp)
     app.register_blueprint(lesson_bp)
@@ -87,6 +86,19 @@ def create_app():
         from models.monthly_debt  import MonthlyDebt   # noqa
 
         db.create_all()
+
+        # Yangi ustunlarni avtomatik qo'shish (eski ma'lumotlarga ta'sir qilmaydi)
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                for col, col_type in [("file_data", "TEXT"), ("file_size", "INTEGER")]:
+                    try:
+                        conn.execute(text(f"ALTER TABLE module_lessons ADD COLUMN {col} {col_type}"))
+                        conn.commit()
+                    except Exception:
+                        pass  # Ustun allaqachon mavjud
+        except Exception as e:
+            print(f"[MIGRATION] {e}")
 
         from utils.utils import create_admin
         create_admin()
