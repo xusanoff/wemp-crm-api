@@ -1,12 +1,11 @@
 """
 Kurs modullari va modul darslarini boshqarish.
-Fayl yuklash: base64 formatida PostgreSQL'da saqlanadi — Vercel-compatible.
-/tmp papkasi ishlatilmaydi.
+Fayl yuklash (PDF / rasm) ham shu yerda.
 """
-import base64
-from flask          import Blueprint, request, send_file
+import os
+import uuid
+from flask          import Blueprint, request, send_from_directory
 from flask_restful  import Api, Resource, reqparse
-from io             import BytesIO
 
 from models                  import db
 from models.course           import Course
@@ -14,8 +13,11 @@ from models.course_module    import CourseModule, ModuleLesson
 from utils.utils             import get_response
 from utils.decorators        import role_required
 
-ALLOWED_EXT  = {"pdf", "png", "jpg", "jpeg", "webp"}
-MAX_SIZE     = 20 * 1024 * 1024   # 20 MB
+UPLOAD_FOLDER = "/tmp/uploads"
+ALLOWED_EXT   = {"pdf", "png", "jpg", "jpeg", "webp"}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 
 
 def allowed_file(filename):
@@ -51,6 +53,13 @@ lesson_update_parse.add_argument("description", type=str)
 # ── BLUEPRINT ─────────────────────────────────────────────────
 course_module_bp = Blueprint("course_module", __name__, url_prefix="/api/course-modules")
 api = Api(course_module_bp)
+
+# Fayllarni xizmat qilish uchun alohida blueprint
+file_bp = Blueprint("files", __name__, url_prefix="/uploads")
+
+@file_bp.route("/<path:filename>")
+def serve_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 # ── MODULLAR ─────────────────────────────────────────────────
@@ -111,6 +120,10 @@ class CourseModuleResource(Resource):
         m = CourseModule.query.filter_by(id=module_id).first()
         if not m:
             return get_response("Module not found", None, 404), 404
+        # Fayllarni ham o'chirish
+        for lesson in m.lessons:
+            if lesson.file_path and os.path.exists(lesson.file_path):
+                os.remove(lesson.file_path)
         db.session.delete(m)
         db.session.commit()
         return get_response("Module deleted", None, 200), 200
@@ -168,15 +181,15 @@ class ModuleLessonResource(Resource):
         l = ModuleLesson.query.filter_by(id=lesson_id, module_id=module_id).first()
         if not l:
             return get_response("Lesson not found", None, 404), 404
+        if l.file_path and os.path.exists(l.file_path):
+            os.remove(l.file_path)
         db.session.delete(l)
         db.session.commit()
         return get_response("Lesson deleted", None, 200), 200
 
 
 class ModuleLessonFileUploadResource(Resource):
-    """POST   /api/course-modules/<mid>/lessons/<lid>/upload — fayl yuklash (base64 → DB)
-       DELETE /api/course-modules/<mid>/lessons/<lid>/upload — faylni o'chirish
-    """
+    """POST /api/course-modules/<mid>/lessons/<lid>/upload — fayl yuklash"""
     decorators = [role_required(["SUPERADMIN", "ADMIN"])]
 
     def post(self, module_id, lesson_id):
@@ -193,85 +206,59 @@ class ModuleLessonFileUploadResource(Resource):
         if not allowed_file(file.filename):
             return get_response("Allowed: pdf, png, jpg, jpeg, webp", None, 400), 400
 
-        file_bytes = file.read()
-        if len(file_bytes) > MAX_SIZE:
-            return get_response("File too large. Max 20MB", None, 400), 400
+        # Eski faylni o'chirish
+        if l.file_path and os.path.exists(l.file_path):
+            os.remove(l.file_path)
 
-        # Base64 encode qilib DB'ga saqlaymiz — /tmp kerak emas
-        encoded = base64.b64encode(file_bytes).decode("utf-8")
+        ext      = file.filename.rsplit(".", 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
 
-        l.file_data = encoded
+        l.file_path = filepath
         l.file_name = file.filename
         l.file_type = get_file_type(file.filename)
-        l.file_size = len(file_bytes)
         db.session.commit()
 
-        return get_response("File uploaded", ModuleLesson.to_dict(l), 200), 200
+        return get_response("File uploaded", {
+            **ModuleLesson.to_dict(l),
+            "file_url": f"/uploads/{filename}",
+        }, 200), 200
 
     def delete(self, module_id, lesson_id):
         """Faylni o'chirish"""
         l = ModuleLesson.query.filter_by(id=lesson_id, module_id=module_id).first()
         if not l:
             return get_response("Lesson not found", None, 404), 404
-        l.file_data = None
+        if l.file_path and os.path.exists(l.file_path):
+            os.remove(l.file_path)
+        l.file_path = None
         l.file_name = None
         l.file_type = None
-        l.file_size = None
         db.session.commit()
         return get_response("File deleted", ModuleLesson.to_dict(l), 200), 200
 
 
-class ModuleLessonFileDownloadResource(Resource):
-    """GET /api/course-modules/<mid>/lessons/<lid>/file — faylni yuklab olish"""
+# Public endpoint — fayl URL olish uchun (auth shart emas, URL orqali ko'rish)
+class ModuleLessonFileViewResource(Resource):
+    """GET /api/course-modules/<mid>/lessons/<lid>/file"""
 
     def get(self, module_id, lesson_id):
         l = ModuleLesson.query.filter_by(id=lesson_id, module_id=module_id).first()
-        if not l or not l.file_data:
+        if not l or not l.file_path:
             return get_response("File not found", None, 404), 404
-
-        file_bytes = base64.b64decode(l.file_data)
-        mime_map = {
-            "pdf":  "application/pdf",
-            "png":  "image/png",
-            "jpg":  "image/jpeg",
-            "jpeg": "image/jpeg",
-            "webp": "image/webp",
-        }
-        ext  = l.file_name.rsplit(".", 1)[-1].lower() if l.file_name else "bin"
-        mime = mime_map.get(ext, "application/octet-stream")
-
-        return send_file(
-            BytesIO(file_bytes),
-            mimetype=mime,
-            as_attachment=False,
-            download_name=l.file_name or f"file.{ext}",
-        )
-
-
-class ModuleLessonFileInfoResource(Resource):
-    """GET /api/course-modules/<mid>/lessons/<lid>/file-info — fayl ma'lumoti (base64 bilan)"""
-    decorators = [role_required(["SUPERADMIN", "ADMIN"])]
-
-    def get(self, module_id, lesson_id):
-        l = ModuleLesson.query.filter_by(id=lesson_id, module_id=module_id).first()
-        if not l:
-            return get_response("Lesson not found", None, 404), 404
-        if not l.file_data:
-            return get_response("No file attached", None, 404), 404
-
+        filename = os.path.basename(l.file_path)
         return get_response("File info", {
-            "file_name":  l.file_name,
-            "file_type":  l.file_type,
-            "file_size":  l.file_size,
-            "file_data":  l.file_data,   # base64 — frontend ko'rsatish uchun
+            "file_url":  f"/uploads/{filename}",
+            "file_name": l.file_name,
+            "file_type": l.file_type,
         }, 200), 200
 
 
 # ── REGISTER ──────────────────────────────────────────────────
-api.add_resource(CourseModuleListResource,         "/")
-api.add_resource(CourseModuleResource,             "/<int:module_id>")
-api.add_resource(ModuleLessonListResource,         "/<int:module_id>/lessons")
-api.add_resource(ModuleLessonResource,             "/<int:module_id>/lessons/<int:lesson_id>")
-api.add_resource(ModuleLessonFileUploadResource,   "/<int:module_id>/lessons/<int:lesson_id>/upload")
-api.add_resource(ModuleLessonFileDownloadResource, "/<int:module_id>/lessons/<int:lesson_id>/file")
-api.add_resource(ModuleLessonFileInfoResource,     "/<int:module_id>/lessons/<int:lesson_id>/file-info")
+api.add_resource(CourseModuleListResource,       "/")
+api.add_resource(CourseModuleResource,           "/<int:module_id>")
+api.add_resource(ModuleLessonListResource,       "/<int:module_id>/lessons")
+api.add_resource(ModuleLessonResource,           "/<int:module_id>/lessons/<int:lesson_id>")
+api.add_resource(ModuleLessonFileUploadResource, "/<int:module_id>/lessons/<int:lesson_id>/upload")
+api.add_resource(ModuleLessonFileViewResource,   "/<int:module_id>/lessons/<int:lesson_id>/file")
