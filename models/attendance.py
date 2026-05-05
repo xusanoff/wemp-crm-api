@@ -5,14 +5,14 @@ class Attendance(db.Model):
     __tablename__ = "attendance"
 
     id               = db.Column(db.Integer, primary_key=True)
-    lesson_id        = db.Column(db.Integer, db.ForeignKey("lessons.id"))
-    student_id       = db.Column(db.Integer, db.ForeignKey("students.id"))
+    lesson_id        = db.Column(db.Integer, db.ForeignKey("lessons.id", ondelete="CASCADE"))
+    student_id       = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"))
     status           = db.Column(db.String(10))            # "keldi" | "kelmadi"
     arrival_time     = db.Column(db.String(5), nullable=True)  # "09:15"
 
     # Qo'shimcha: qaysi modulda va qaysi darsda ekanini ko'rsatish
-    module_id        = db.Column(db.Integer, db.ForeignKey("course_modules.id"),  nullable=True)
-    module_lesson_id = db.Column(db.Integer, db.ForeignKey("module_lessons.id"),  nullable=True)
+    module_id        = db.Column(db.Integer, db.ForeignKey("course_modules.id", ondelete="CASCADE"), nullable=True)
+    module_lesson_id = db.Column(db.Integer, db.ForeignKey("module_lessons.id", ondelete="CASCADE"), nullable=True)
     # Dars turi: "dars" | "savol-javob" | "project"
     lesson_type      = db.Column(db.String(20), default="dars", nullable=True)
 
