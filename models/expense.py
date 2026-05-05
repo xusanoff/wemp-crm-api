@@ -13,7 +13,7 @@ class Expense(db.Model):
     description  = db.Column(db.String(255), nullable=False)
     category     = db.Column(db.String(50), nullable=True)
     expense_date = db.Column(db.Date, nullable=False, default=lambda: datetime.now(time_zone).date())
-    created_by   = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_by   = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     created_at   = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
     creator = db.relationship("User", backref="expenses", lazy="joined")
