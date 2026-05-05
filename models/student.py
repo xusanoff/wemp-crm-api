@@ -17,7 +17,7 @@ class Student(db.Model):
 
 
     groups = db.relationship("Group", cascade="all, delete-orphan", passive_deletes=True)
-    enrollments = db.relationship("Enrollment", cascade="all, delete-orphan", passive_deletes=True)
+    enrollments = db.relationship("Enrollment",back_populates="student",cascade="all, delete-orphan",passive_deletes=True)
     payments = db.relationship("Payment", cascade="all, delete-orphan", passive_deletes=True)
     debts = db.relationship("Debt", cascade="all, delete-orphan", passive_deletes=True)
     monthly_debts = db.relationship("MonthlyDebt", cascade="all, delete-orphan", passive_deletes=True)
