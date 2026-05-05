@@ -5,18 +5,13 @@ class Lesson(db.Model):
     __tablename__ = "lessons"
 
     id             = db.Column(db.Integer, primary_key=True)
-    group_id       = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"))
+    group_id       = db.Column(db.Integer, db.ForeignKey("groups.id"))
     lesson_date    = db.Column(db.Date)
     lesson_time    = db.Column(db.Time)
     is_cancelled   = db.Column(db.Boolean, default=False)
     cancel_reason  = db.Column(db.Text, nullable=True)
     original_date  = db.Column(db.Date, nullable=True)
     is_rescheduled = db.Column(db.Boolean, default=False)
-
-    # CASCADE: Dars o'chirilsa, davomat yozuvlari ham o'chadi
-    attendances = db.relationship("Attendance", backref="lesson", lazy="dynamic",
-                                  cascade="all, delete-orphan",
-                                  foreign_keys="Attendance.lesson_id")
 
     def __init__(self, group_id, lesson_date, lesson_time,
                  is_cancelled=False, cancel_reason=None,
