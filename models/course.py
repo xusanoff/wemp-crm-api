@@ -9,14 +9,6 @@ class Course(db.Model):
     price            = db.Column(db.Float, nullable=False)
     duration_months  = db.Column(db.Integer, nullable=False, default=1)
 
-    # CASCADE: Course o'chirilsa, unga bog'liq modules va groups ham o'chadi
-    modules = db.relationship("CourseModule", backref="course_ref",
-                              lazy="dynamic", cascade="all, delete-orphan",
-                              foreign_keys="CourseModule.course_id")
-    groups  = db.relationship("Group", backref="course_ref",
-                              lazy="dynamic", cascade="all, delete-orphan",
-                              foreign_keys="Group.course_id")
-
     def __init__(self, name, price, duration_months=1):
         super().__init__()
         self.name            = name
