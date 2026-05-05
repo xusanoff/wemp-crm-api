@@ -11,9 +11,9 @@ class Group(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     # Guruh nomi avtomatik: "StudentIsmi - KursNomi"
     name        = db.Column(db.String(150), nullable=False)
-    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
-    student_id  = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=True)  # Egalik
-    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)     # O'qituvchi (User)
+    course_id  = db.Column(db.Integer, db.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)     # O'qituvchi (User)
     lesson_time = db.Column(db.Time, nullable=False)
     start_date  = db.Column(db.Date, nullable=True)
 
