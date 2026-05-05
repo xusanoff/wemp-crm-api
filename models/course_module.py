@@ -16,7 +16,7 @@ class CourseModule(db.Model):
     __tablename__ = "course_modules"
 
     id          = db.Column(db.Integer, primary_key=True)
-    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
     title       = db.Column(db.String(200), nullable=False)
     order_num   = db.Column(db.Integer, default=1)
     description = db.Column(db.Text, nullable=True)
@@ -56,7 +56,7 @@ class ModuleLesson(db.Model):
     __tablename__ = "module_lessons"
 
     id          = db.Column(db.Integer, primary_key=True)
-    module_id   = db.Column(db.Integer, db.ForeignKey("course_modules.id"), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey("course_modules.id", ondelete="CASCADE"), nullable=False)
     title       = db.Column(db.String(200), nullable=False)
     order_num   = db.Column(db.Integer, default=1)
     description = db.Column(db.Text, nullable=True)
