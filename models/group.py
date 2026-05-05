@@ -10,20 +10,23 @@ class Group(db.Model):
 
     id          = db.Column(db.Integer, primary_key=True)
     name        = db.Column(db.String(150), nullable=False)
-    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
-    student_id  = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="SET NULL"), nullable=True)
-    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id",    ondelete="SET NULL"), nullable=True)
+    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id",   ondelete="CASCADE"), nullable=False)
+    student_id  = db.Column(db.Integer, db.ForeignKey("students.id",  ondelete="SET NULL"), nullable=True)
+    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id",     ondelete="SET NULL"), nullable=True)
     lesson_time = db.Column(db.Time, nullable=False)
     start_date  = db.Column(db.Date, nullable=True)
 
-    course  = db.relationship("Course", lazy="joined", foreign_keys=[course_id])
-    teacher = db.relationship("User",   backref="teaching_groups", lazy="joined", foreign_keys=[teacher_id])
+    course  = db.relationship("Course", lazy="joined", foreign_keys=[course_id],
+                              overlaps="course_ref,groups")
+    teacher = db.relationship("User",   backref="teaching_groups", lazy="joined",
+                              foreign_keys=[teacher_id])
 
-    # CASCADE: Guruh o'chirilsa, darslar va yozilishlar ham o'chadi
-    lessons     = db.relationship("Lesson",     backref="group", lazy="dynamic",
-                                  cascade="all, delete-orphan", foreign_keys="Lesson.group_id")
-    enrollments = db.relationship("Enrollment", backref="group", lazy="dynamic",
+    # back_populates — Enrollment.group bilan juftlashadi
+    enrollments = db.relationship("Enrollment", back_populates="group", lazy="dynamic",
                                   cascade="all, delete-orphan", foreign_keys="Enrollment.group_id")
+    # CASCADE: Guruh o'chirilsa, darslar ham o'chadi
+    lessons     = db.relationship("Lesson", backref="group", lazy="dynamic",
+                                  cascade="all, delete-orphan", foreign_keys="Lesson.group_id")
 
     def __init__(self, name, course_id, lesson_time,
                  student_id=None, teacher_id=None, start_date=None):
@@ -48,7 +51,7 @@ class Group(db.Model):
 
     @staticmethod
     def to_dict(group):
-        _ = {
+        return {
             "id":              group.id,
             "name":            group.name,
             "course_id":       group.course_id,
@@ -61,4 +64,3 @@ class Group(db.Model):
             "duration_months": group.duration_months,
             "lesson_time":     str(group.lesson_time),
         }
-        return _
