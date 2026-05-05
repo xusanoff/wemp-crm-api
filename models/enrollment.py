@@ -9,7 +9,7 @@ class Enrollment(db.Model):
     group_id   = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     status     = db.Column(db.String(20), default="active")
 
-    student = db.relationship("Student", backref="enrollments", lazy="joined")
+    student = db.relationship("Student",back_populates="enrollments")
     group   = db.relationship("Group",   backref="enrollments", lazy="joined")
 
     def __init__(self, student_id, group_id, status="active"):
