@@ -20,9 +20,11 @@ class MonthlyDebt(db.Model):
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
-    student    = db.relationship("Student",    backref="monthly_debts", lazy="joined")
-    # enrollment relationship — enrollment.py dagi backref="monthly_debts" bilan to'qnashmaydi
-    enrollment = db.relationship("Enrollment", lazy="joined", foreign_keys=[enrollment_id])
+    # back_populates — Student.monthly_debts va Enrollment.monthly_debts bilan juftlashadi
+    student    = db.relationship("Student",    back_populates="monthly_debts", lazy="joined",
+                                 foreign_keys=[student_id])
+    enrollment = db.relationship("Enrollment", back_populates="monthly_debts", lazy="joined",
+                                 foreign_keys=[enrollment_id])
 
     def __init__(self, student_id, enrollment_id, for_month, amount):
         super().__init__()
