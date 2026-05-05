@@ -13,8 +13,8 @@ class MonthlyDebt(db.Model):
     __tablename__ = "monthly_debts"
 
     id            = db.Column(db.Integer, primary_key=True)
-    student_id    = db.Column(db.Integer, db.ForeignKey("students.id"),    nullable=False)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id"), nullable=False)
+    student_id    = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id", ondelete="CASCADE"), nullable=False)
     for_month     = db.Column(db.String(7), nullable=False)  # "2025-01"
     amount        = db.Column(db.Float, nullable=False)       # oylik summa (kurs_narxi / davomiylik)
     paid_amount   = db.Column(db.Float, default=0.0)
