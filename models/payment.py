@@ -9,14 +9,21 @@ class Debt(db.Model):
     __tablename__ = "debts"
 
     id            = db.Column(db.Integer, primary_key=True)
-    student_id    = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    student_id    = db.Column(db.Integer, db.ForeignKey("students.id",    ondelete="CASCADE"), nullable=False)
     enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id", ondelete="CASCADE"), nullable=False, unique=True)
     total_amount  = db.Column(db.Float, nullable=False)
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
     student    = db.relationship("Student",    backref="debts", lazy="joined")
-    enrollment = db.relationship("Enrollment", backref="debt",  lazy="joined", uselist=False)
+    # enrollment relationship — enrollment.py dagi backref="debt" bilan to'qnashmaydi
+    enrollment = db.relationship("Enrollment", lazy="joined", uselist=False,
+                                 foreign_keys=[enrollment_id])
+
+    # CASCADE: Debt o'chirilsa, to'lovlar ham o'chadi
+    payments = db.relationship("Payment", backref="debt", lazy="dynamic",
+                               cascade="all, delete-orphan",
+                               foreign_keys="Payment.debt_id")
 
     def __init__(self, student_id, enrollment_id, total_amount):
         super().__init__()
@@ -52,16 +59,17 @@ class Payment(db.Model):
     __tablename__ = "payments"
 
     id           = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-    debt_id    = db.Column(db.Integer, db.ForeignKey("debts.id", ondelete="CASCADE"), nullable=True)
+    student_id   = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    debt_id      = db.Column(db.Integer, db.ForeignKey("debts.id",    ondelete="SET NULL"), nullable=True)
     payment_type = db.Column(db.String(20), nullable=False)
     for_month    = db.Column(db.String(10), nullable=False)
     amount       = db.Column(db.Float, nullable=False)
     comment      = db.Column(db.Text)
     payment_date = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_by   = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
 
-    debt = db.relationship("Debt", backref="payments", lazy="joined")
+    # debt relationship — Debt modelidagi backref="debt" bilan to'qnashmaydi
+    debt_ref = db.relationship("Debt", lazy="joined", foreign_keys=[debt_id])
 
     def __init__(self, student_id, payment_type, for_month, amount, comment, created_by, debt_id=None):
         super().__init__()
