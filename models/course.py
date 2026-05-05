@@ -11,7 +11,12 @@ class Course(db.Model):
 
 
     groups = db.relationship("Group", cascade="all, delete-orphan", passive_deletes=True)
-    modules = db.relationship("CourseModule", cascade="all, delete-orphan", passive_deletes=True)
+    modules = db.relationship(
+    "CourseModule",
+    back_populates="course",
+    cascade="all, delete-orphan",
+    passive_deletes=True
+)
 
     def __init__(self, name, price, duration_months=1):
         super().__init__()
