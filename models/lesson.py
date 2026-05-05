@@ -5,7 +5,7 @@ class Lesson(db.Model):
     __tablename__ = "lessons"
 
     id             = db.Column(db.Integer, primary_key=True)
-    group_id       = db.Column(db.Integer, db.ForeignKey("groups.id"))
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"))
     lesson_date    = db.Column(db.Date)
     lesson_time    = db.Column(db.Time)
     is_cancelled   = db.Column(db.Boolean, default=False)
