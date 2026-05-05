@@ -52,14 +52,14 @@ class Payment(db.Model):
     __tablename__ = "payments"
 
     id           = db.Column(db.Integer, primary_key=True)
-    student_id   = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
-    debt_id      = db.Column(db.Integer, db.ForeignKey("debts.id"),    nullable=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    debt_id    = db.Column(db.Integer, db.ForeignKey("debts.id", ondelete="CASCADE"), nullable=True)
     payment_type = db.Column(db.String(20), nullable=False)
     for_month    = db.Column(db.String(10), nullable=False)
     amount       = db.Column(db.Float, nullable=False)
     comment      = db.Column(db.Text)
     payment_date = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
-    created_by   = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
 
     debt = db.relationship("Debt", backref="payments", lazy="joined")
 
