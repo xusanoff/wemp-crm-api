@@ -19,6 +19,7 @@ class Group(db.Model):
 
     course  = db.relationship("Course", backref="groups",  lazy="joined")
     teacher = db.relationship("User",   backref="teaching_groups", lazy="joined", foreign_keys=[teacher_id])
+    lessons = db.relationship("Lesson", cascade="all, delete-orphan", passive_deletes=True)
 
     def __init__(self, name, course_id, lesson_time,
                  student_id=None, teacher_id=None, start_date=None):
