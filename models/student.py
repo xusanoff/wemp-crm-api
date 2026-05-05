@@ -15,6 +15,14 @@ class Student(db.Model):
     created_by   = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     created_at   = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
+    # back_populates — Enrollment.student bilan juftlashadi
+    enrollments   = db.relationship("Enrollment",  back_populates="student", lazy="dynamic",
+                                    foreign_keys="Enrollment.student_id")
+    debts         = db.relationship("Debt",        back_populates="student", lazy="dynamic",
+                                    foreign_keys="Debt.student_id")
+    monthly_debts = db.relationship("MonthlyDebt", back_populates="student", lazy="dynamic",
+                                    foreign_keys="MonthlyDebt.student_id")
+
     def __init__(self, full_name, phone_number=None, comment=None, created_by=None):
         super().__init__()
         self.full_name    = full_name
@@ -24,7 +32,7 @@ class Student(db.Model):
 
     @staticmethod
     def to_dict(student):
-        _ = {
+        return {
             "id":           student.id,
             "full_name":    student.full_name,
             "phone_number": student.phone_number,
@@ -32,4 +40,3 @@ class Student(db.Model):
             "created_by":   student.created_by,
             "created_at":   str(student.created_at),
         }
-        return _
