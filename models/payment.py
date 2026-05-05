@@ -15,10 +15,11 @@ class Debt(db.Model):
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
-    student    = db.relationship("Student",    backref="debts", lazy="joined")
-    # enrollment relationship — enrollment.py dagi backref="debt" bilan to'qnashmaydi
-    enrollment = db.relationship("Enrollment", lazy="joined", uselist=False,
-                                 foreign_keys=[enrollment_id])
+    # back_populates — Student.debts va Enrollment.debt bilan juftlashadi
+    student    = db.relationship("Student",    back_populates="debts", lazy="joined",
+                                 foreign_keys=[student_id])
+    enrollment = db.relationship("Enrollment", back_populates="debt", lazy="joined",
+                                 uselist=False, foreign_keys=[enrollment_id])
 
     # CASCADE: Debt o'chirilsa, to'lovlar ham o'chadi
     payments = db.relationship("Payment", backref="debt", lazy="dynamic",
@@ -42,7 +43,7 @@ class Debt(db.Model):
 
     @staticmethod
     def to_dict(debt):
-        _ = {
+        return {
             "id":             debt.id,
             "student_id":     debt.student_id,
             "enrollment_id":  debt.enrollment_id,
@@ -52,7 +53,6 @@ class Debt(db.Model):
             "is_fully_paid":  debt.is_fully_paid,
             "created_at":     str(debt.created_at),
         }
-        return _
 
 
 class Payment(db.Model):
@@ -68,9 +68,6 @@ class Payment(db.Model):
     payment_date = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
     created_by   = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
 
-    # debt relationship — Debt modelidagi backref="debt" bilan to'qnashmaydi
-    debt_ref = db.relationship("Debt", lazy="joined", foreign_keys=[debt_id])
-
     def __init__(self, student_id, payment_type, for_month, amount, comment, created_by, debt_id=None):
         super().__init__()
         self.student_id   = student_id
@@ -83,7 +80,7 @@ class Payment(db.Model):
 
     @staticmethod
     def to_dict(payment):
-        _ = {
+        return {
             "id":           payment.id,
             "student_id":   payment.student_id,
             "debt_id":      payment.debt_id,
@@ -94,4 +91,3 @@ class Payment(db.Model):
             "payment_date": str(payment.payment_date),
             "created_by":   payment.created_by,
         }
-        return _
