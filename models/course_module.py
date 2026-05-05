@@ -22,7 +22,10 @@ class CourseModule(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at  = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
-    course = db.relationship("Course", backref="modules")
+    course = db.relationship(
+    "Course",
+    back_populates="modules"
+)
     lessons = db.relationship("ModuleLesson", backref="module",
                               lazy="dynamic", cascade="all, delete-orphan",
                               order_by="ModuleLesson.order_num")
