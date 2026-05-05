@@ -9,22 +9,14 @@ class Debt(db.Model):
     __tablename__ = "debts"
 
     id            = db.Column(db.Integer, primary_key=True)
-    student_id    = db.Column(db.Integer, db.ForeignKey("students.id",    ondelete="CASCADE"), nullable=False)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id", ondelete="CASCADE"), nullable=False, unique=True)
+    student_id    = db.Column(db.Integer, db.ForeignKey("students.id"),    nullable=False)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id"), nullable=False, unique=True)
     total_amount  = db.Column(db.Float, nullable=False)
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
-    # back_populates — Student.debts va Enrollment.debt bilan juftlashadi
-    student    = db.relationship("Student",    back_populates="debts", lazy="joined",
-                                 foreign_keys=[student_id])
-    enrollment = db.relationship("Enrollment", back_populates="debt", lazy="joined",
-                                 uselist=False, foreign_keys=[enrollment_id])
-
-    # CASCADE: Debt o'chirilsa, to'lovlar ham o'chadi
-    payments = db.relationship("Payment", backref="debt", lazy="dynamic",
-                               cascade="all, delete-orphan",
-                               foreign_keys="Payment.debt_id")
+    student    = db.relationship("Student",    backref="debts", lazy="joined")
+    enrollment = db.relationship("Enrollment", backref="debt",  lazy="joined", uselist=False)
 
     def __init__(self, student_id, enrollment_id, total_amount):
         super().__init__()
@@ -43,7 +35,7 @@ class Debt(db.Model):
 
     @staticmethod
     def to_dict(debt):
-        return {
+        _ = {
             "id":             debt.id,
             "student_id":     debt.student_id,
             "enrollment_id":  debt.enrollment_id,
@@ -53,20 +45,23 @@ class Debt(db.Model):
             "is_fully_paid":  debt.is_fully_paid,
             "created_at":     str(debt.created_at),
         }
+        return _
 
 
 class Payment(db.Model):
     __tablename__ = "payments"
 
     id           = db.Column(db.Integer, primary_key=True)
-    student_id   = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
-    debt_id      = db.Column(db.Integer, db.ForeignKey("debts.id",    ondelete="SET NULL"), nullable=True)
+    student_id   = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    debt_id      = db.Column(db.Integer, db.ForeignKey("debts.id"),    nullable=True)
     payment_type = db.Column(db.String(20), nullable=False)
     for_month    = db.Column(db.String(10), nullable=False)
     amount       = db.Column(db.Float, nullable=False)
     comment      = db.Column(db.Text)
     payment_date = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
-    created_by   = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_by   = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    debt = db.relationship("Debt", backref="payments", lazy="joined")
 
     def __init__(self, student_id, payment_type, for_month, amount, comment, created_by, debt_id=None):
         super().__init__()
@@ -80,7 +75,7 @@ class Payment(db.Model):
 
     @staticmethod
     def to_dict(payment):
-        return {
+        _ = {
             "id":           payment.id,
             "student_id":   payment.student_id,
             "debt_id":      payment.debt_id,
@@ -91,3 +86,4 @@ class Payment(db.Model):
             "payment_date": str(payment.payment_date),
             "created_by":   payment.created_by,
         }
+        return _
