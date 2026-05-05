@@ -12,7 +12,7 @@ class Student(db.Model):
     full_name    = db.Column(db.String(120), nullable=False)
     phone_number = db.Column(db.String(20), unique=True)
     comment      = db.Column(db.Text)
-    created_by   = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     created_at   = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
     def __init__(self, full_name, phone_number=None, comment=None, created_by=None):
