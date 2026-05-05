@@ -17,7 +17,10 @@ class Group(db.Model):
     lesson_time = db.Column(db.Time, nullable=False)
     start_date  = db.Column(db.Date, nullable=True)
 
-    course  = db.relationship("Course", backref="groups",  lazy="joined")
+    course = db.relationship(
+    "Course",
+    back_populates="modules"
+)
     teacher = db.relationship("User",   backref="teaching_groups", lazy="joined", foreign_keys=[teacher_id])
     lessons = db.relationship("Lesson", cascade="all, delete-orphan", passive_deletes=True)
 
