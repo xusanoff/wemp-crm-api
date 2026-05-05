@@ -1,6 +1,3 @@
-from models import db
-
-
 class Enrollment(db.Model):
     __tablename__ = "enrollments"
 
@@ -9,15 +6,16 @@ class Enrollment(db.Model):
     group_id   = db.Column(db.Integer, db.ForeignKey("groups.id",   ondelete="CASCADE"), nullable=False)
     status     = db.Column(db.String(20), default="active")
 
-    student = db.relationship("Student", backref="enrollments", lazy="joined")
-    # group relationship — group.py dagi backref="group" bilan to'qnashmaydi
-    group   = db.relationship("Group",   lazy="joined", foreign_keys=[group_id])
+    # back_populates ishlatamiz — backref o'rniga (to'qnashmaydi)
+    student = db.relationship("Student", back_populates="enrollments", lazy="joined")
+    group   = db.relationship("Group",   back_populates="enrollments", lazy="joined",
+                              foreign_keys=[group_id])
 
     # CASCADE: Enrollment o'chirilsa, debt va monthly_debts ham o'chadi
-    debt          = db.relationship("Debt",        backref="enrollment_ref", lazy="joined",
+    debt          = db.relationship("Debt",        back_populates="enrollment", lazy="joined",
                                     cascade="all, delete-orphan", uselist=False,
                                     foreign_keys="Debt.enrollment_id")
-    monthly_debts = db.relationship("MonthlyDebt", backref="enrollment_ref", lazy="dynamic",
+    monthly_debts = db.relationship("MonthlyDebt", back_populates="enrollment", lazy="dynamic",
                                     cascade="all, delete-orphan",
                                     foreign_keys="MonthlyDebt.enrollment_id")
 
@@ -29,10 +27,9 @@ class Enrollment(db.Model):
 
     @staticmethod
     def to_dict(enrollment):
-        _ = {
+        return {
             "id":         enrollment.id,
             "student_id": enrollment.student_id,
             "group_id":   enrollment.group_id,
             "status":     enrollment.status,
         }
-        return _
