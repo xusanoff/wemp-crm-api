@@ -9,20 +9,21 @@ class Group(db.Model):
     __tablename__ = "groups"
 
     id          = db.Column(db.Integer, primary_key=True)
-    # Guruh nomi avtomatik: "StudentIsmi - KursNomi"
     name        = db.Column(db.String(150), nullable=False)
-    course_id  = db.Column(db.Integer, db.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
-    student_id = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=True)
-    teacher_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)     # O'qituvchi (User)
+    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    student_id  = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="SET NULL"), nullable=True)
+    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id",    ondelete="SET NULL"), nullable=True)
     lesson_time = db.Column(db.Time, nullable=False)
     start_date  = db.Column(db.Date, nullable=True)
 
-    course = db.relationship(
-    "Course",
-    back_populates="modules"
-)
+    course  = db.relationship("Course", lazy="joined", foreign_keys=[course_id])
     teacher = db.relationship("User",   backref="teaching_groups", lazy="joined", foreign_keys=[teacher_id])
-    lessons = db.relationship("Lesson", cascade="all, delete-orphan", passive_deletes=True)
+
+    # CASCADE: Guruh o'chirilsa, darslar va yozilishlar ham o'chadi
+    lessons     = db.relationship("Lesson",     backref="group", lazy="dynamic",
+                                  cascade="all, delete-orphan", foreign_keys="Lesson.group_id")
+    enrollments = db.relationship("Enrollment", backref="group", lazy="dynamic",
+                                  cascade="all, delete-orphan", foreign_keys="Enrollment.group_id")
 
     def __init__(self, name, course_id, lesson_time,
                  student_id=None, teacher_id=None, start_date=None):
