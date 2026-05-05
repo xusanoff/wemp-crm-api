@@ -9,6 +9,10 @@ class Course(db.Model):
     price            = db.Column(db.Float, nullable=False)
     duration_months  = db.Column(db.Integer, nullable=False, default=1)
 
+
+    groups = db.relationship("Group", cascade="all, delete-orphan", passive_deletes=True)
+    modules = db.relationship("CourseModule", cascade="all, delete-orphan", passive_deletes=True)
+
     def __init__(self, name, price, duration_months=1):
         super().__init__()
         self.name            = name
