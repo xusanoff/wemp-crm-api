@@ -5,8 +5,8 @@ class Enrollment(db.Model):
     __tablename__ = "enrollments"
 
     id         = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
-    group_id   = db.Column(db.Integer, db.ForeignKey("groups.id"),   nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    group_id   = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     status     = db.Column(db.String(20), default="active")
 
     student = db.relationship("Student", backref="enrollments", lazy="joined")
