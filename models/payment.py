@@ -9,8 +9,8 @@ class Debt(db.Model):
     __tablename__ = "debts"
 
     id            = db.Column(db.Integer, primary_key=True)
-    student_id    = db.Column(db.Integer, db.ForeignKey("students.id"),    nullable=False)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id"), nullable=False, unique=True)
+    student_id    = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id", ondelete="CASCADE"), nullable=False, unique=True)
     total_amount  = db.Column(db.Float, nullable=False)
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
