@@ -13,15 +13,16 @@ class MonthlyDebt(db.Model):
     __tablename__ = "monthly_debts"
 
     id            = db.Column(db.Integer, primary_key=True)
-    student_id    = db.Column(db.Integer, db.ForeignKey("students.id"),    nullable=False)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id"), nullable=False)
-    for_month     = db.Column(db.String(7), nullable=False)  # "2025-01"
-    amount        = db.Column(db.Float, nullable=False)       # oylik summa (kurs_narxi / davomiylik)
+    student_id    = db.Column(db.Integer, db.ForeignKey("students.id",    ondelete="CASCADE"), nullable=False)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey("enrollments.id", ondelete="CASCADE"), nullable=False)
+    for_month     = db.Column(db.String(7), nullable=False)   # "2025-01"
+    amount        = db.Column(db.Float, nullable=False)        # oylik summa
     paid_amount   = db.Column(db.Float, default=0.0)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
-    student    = db.relationship("Student",    backref="monthly_debts", lazy="joined")
-    enrollment = db.relationship("Enrollment", backref="monthly_debts", lazy="joined")
+    # backref ishlatilmaydi — student.py va enrollment.py da relationship aniqlangan
+    student    = db.relationship("Student",    foreign_keys=[student_id],    lazy="joined")
+    enrollment = db.relationship("Enrollment", foreign_keys=[enrollment_id], lazy="joined")
 
     def __init__(self, student_id, enrollment_id, for_month, amount):
         super().__init__()
