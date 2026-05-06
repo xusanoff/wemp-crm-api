@@ -9,16 +9,23 @@ class Group(db.Model):
     __tablename__ = "groups"
 
     id          = db.Column(db.Integer, primary_key=True)
-    # Guruh nomi avtomatik: "StudentIsmi - KursNomi"
     name        = db.Column(db.String(150), nullable=False)
-    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
-    student_id  = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=True)  # Egalik
-    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)     # O'qituvchi (User)
+    course_id   = db.Column(db.Integer, db.ForeignKey("courses.id",   ondelete="CASCADE"), nullable=False)
+    student_id  = db.Column(db.Integer, db.ForeignKey("students.id",  ondelete="CASCADE"), nullable=True)
+    teacher_id  = db.Column(db.Integer, db.ForeignKey("users.id"),    nullable=True)
     lesson_time = db.Column(db.Time, nullable=False)
     start_date  = db.Column(db.Date, nullable=True)
 
-    course  = db.relationship("Course", backref="groups",  lazy="joined")
-    teacher = db.relationship("User",   backref="teaching_groups", lazy="joined", foreign_keys=[teacher_id])
+    # backref nomlari course.py va student.py dagi backref lardan farq qilishi kerak
+    course  = db.relationship("Course", foreign_keys=[course_id],  lazy="joined")
+    teacher = db.relationship("User",   foreign_keys=[teacher_id], lazy="joined",
+                               backref="teaching_groups")
+
+    # Group o'chirilsa => lessons, enrollments ham o'chadi
+    lessons     = db.relationship("Lesson",     backref="group_ref", lazy="dynamic",
+                                   cascade="all, delete-orphan")
+    enrollments = db.relationship("Enrollment", backref="group_ref", lazy="dynamic",
+                                   cascade="all, delete-orphan")
 
     def __init__(self, name, course_id, lesson_time,
                  student_id=None, teacher_id=None, start_date=None):
