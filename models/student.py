@@ -15,6 +15,21 @@ class Student(db.Model):
     created_by   = db.Column(db.Integer, db.ForeignKey("users.id"))
     created_at   = db.Column(db.DateTime, default=lambda: datetime.now(time_zone))
 
+    # Student o'chirilsa => barcha bog'liq yozuvlar ham o'chadi
+    enrollments  = db.relationship("Enrollment",  backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan")
+    payments     = db.relationship("Payment",     backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan")
+    debts        = db.relationship("Debt",        backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan")
+    monthly_debts= db.relationship("MonthlyDebt", backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan")
+    attendances  = db.relationship("Attendance",  backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan")
+    groups       = db.relationship("Group",       backref="student_ref",  lazy="dynamic",
+                                    cascade="all, delete-orphan",
+                                    foreign_keys="Group.student_id")
+
     def __init__(self, full_name, phone_number=None, comment=None, created_by=None):
         super().__init__()
         self.full_name    = full_name
