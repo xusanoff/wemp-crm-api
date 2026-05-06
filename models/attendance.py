@@ -5,19 +5,20 @@ class Attendance(db.Model):
     __tablename__ = "attendance"
 
     id               = db.Column(db.Integer, primary_key=True)
-    lesson_id        = db.Column(db.Integer, db.ForeignKey("lessons.id"))
-    student_id       = db.Column(db.Integer, db.ForeignKey("students.id"))
-    status           = db.Column(db.String(10))            # "keldi" | "kelmadi"
-    arrival_time     = db.Column(db.String(5), nullable=True)  # "09:15"
+    lesson_id        = db.Column(db.Integer, db.ForeignKey("lessons.id",  ondelete="CASCADE"))
+    student_id       = db.Column(db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"))
+    status           = db.Column(db.String(10))             # "keldi" | "kelmadi"
+    arrival_time     = db.Column(db.String(5), nullable=True)   # "09:15"
 
-    # Qo'shimcha: qaysi modulda va qaysi darsda ekanini ko'rsatish
-    module_id        = db.Column(db.Integer, db.ForeignKey("course_modules.id"),  nullable=True)
-    module_lesson_id = db.Column(db.Integer, db.ForeignKey("module_lessons.id"),  nullable=True)
-    # Dars turi: "dars" | "savol-javob" | "project"
+    module_id        = db.Column(db.Integer, db.ForeignKey("course_modules.id"), nullable=True)
+    module_lesson_id = db.Column(db.Integer, db.ForeignKey("module_lessons.id"), nullable=True)
     lesson_type      = db.Column(db.String(20), default="dars", nullable=True)
 
-    module        = db.relationship("CourseModule", lazy="joined", foreign_keys=[module_id])
-    module_lesson = db.relationship("ModuleLesson", lazy="joined", foreign_keys=[module_lesson_id])
+    # backref ishlatilmaydi — lesson.py va student.py da relationship aniqlangan
+    lesson        = db.relationship("Lesson",       foreign_keys=[lesson_id],        lazy="joined")
+    student       = db.relationship("Student",      foreign_keys=[student_id],       lazy="joined")
+    module        = db.relationship("CourseModule", foreign_keys=[module_id],        lazy="joined")
+    module_lesson = db.relationship("ModuleLesson", foreign_keys=[module_lesson_id], lazy="joined")
 
     def __init__(self, lesson_id, student_id, status, arrival_time=None,
                  module_id=None, module_lesson_id=None, lesson_type="dars"):
@@ -33,14 +34,14 @@ class Attendance(db.Model):
     @staticmethod
     def to_dict(a):
         return {
-            "id":               a.id,
-            "lesson_id":        a.lesson_id,
-            "student_id":       a.student_id,
-            "status":           a.status,
-            "arrival_time":     a.arrival_time,
-            "module_id":        a.module_id,
-            "module_title":     a.module.title if a.module else None,
-            "module_lesson_id": a.module_lesson_id,
+            "id":                  a.id,
+            "lesson_id":           a.lesson_id,
+            "student_id":          a.student_id,
+            "status":              a.status,
+            "arrival_time":        a.arrival_time,
+            "module_id":           a.module_id,
+            "module_title":        a.module.title if a.module else None,
+            "module_lesson_id":    a.module_lesson_id,
             "module_lesson_title": a.module_lesson.title if a.module_lesson else None,
-            "lesson_type":      a.lesson_type,
+            "lesson_type":         a.lesson_type,
         }
